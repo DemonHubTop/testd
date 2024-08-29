@@ -1,36 +1,160 @@
--- Prompt user for key
-local userKey = getKeyFromUser()
-    local key = "key123" -- Replace this with actual input method
-    return key
-end
--- Check if the key is valid
-if not isValidKey(userKey) then
-    -- Notify user that the key is invalid
-    game.StarterGui:SetCore("SendNotification", {
-        Title = "Demon";
-        Text = "Invalid Key!";
-        KeyLink = "",
-        Icon = "";
-        Duration = 5;
-    })
-    return
-end
+local Toggle = AddButton(Main, {
+  Name = "Start",
+  Default = false,
+  Callback = function(Value)
+getgenv().Setting = {
 
--- If the key is valid, continue with the script
-wait(1.2)
+    ["Hunt"] = {
 
-game.StarterGui:SetCore("SendNotification", {
-    Title = "Credits";
-    Text = "Made by Demon/Jova,";
-    Icon = "";
-    Duration = 5;
+        ["Team"] = "Pirates",
+
+        ["Min"] = 0,
+
+        ["Max"] = 30000000,
+
+        ["Webhook"] = true, 
+
+        ["Url"] = "you link webhook" -- paste you link webhook discord
+
+    },
+
+    ["Skip"] = {
+
+        ["V4"] = true,
+
+        ["Fruit"] = true,
+
+        ["FruitList"] = {
+
+            "Leopard",
+
+            "Venom",
+
+            "Dough",
+
+            "Portal"
+
+        }
+
+    },
+
+    ["Chat"] = {
+
+        ["Enabled"] = false,
+
+        ["List"] = {"Tbao Hub On Top"},
+
+    },
+
+    ["Click"] = {
+
+        ["AlwaysClick"] = false,
+
+        ["FastClick"] = false
+
+    },
+
+    ["Another"] = {
+
+        ["V3"] = true,
+
+        ["CustomHealth"] = true,
+
+        ["Health"] = 12000,
+
+        ["V4"] = true,
+
+        ["LockCamera"] = true,
+
+        ["FPSBoots"] = false,
+
+        ["WhiteScreen"] = false,
+
+        ["BypassTp"] = true
+
+    },
+
+    ["SafeHealth"] = {
+
+        ["Health"] = 3000,
+
+        ["HighY"] = 1500
+
+    },
+
+    ["Melee"] = {
+
+        ["Enable"] = true,
+
+        ["Delay"] = 2.5,
+
+        ["Z"] = {["Enable"] = true, ["HoldTime"] = 0},
+
+        ["X"] = {["Enable"] = true, ["HoldTime"] = 0},
+
+        ["C"] = {["Enable"] = true, ["HoldTime"] = 0},
+
+        ["V"] = {["Enable"] = true, ["HoldTime"] = 0}
+
+    },
+
+    ["Fruit"] = {
+
+        ["Enable"] = true,
+
+        ["Delay"] = 2,
+
+        ["Z"] = {["Enable"] = true, ["HoldTime"] = 0},
+
+        ["X"] = {["Enable"] = true, ["HoldTime"] = 0},
+
+        ["C"] = {["Enable"] = true, ["HoldTime"] = 0},
+
+        ["V"] = {["Enable"] = true, ["HoldTime"] = 1.25},
+
+        ["F"] = {["Enable"] = false, ["HoldTime"] = 0}
+
+    },
+
+    ["Sword"] = {
+
+        ["Enable"] = true,
+
+        ["Delay"] = 1,
+
+        ["Z"] = {["Enable"] = true, ["HoldTime"] = 0},
+
+        ["X"] = {["Enable"] = true, ["HoldTime"] = 0}
+
+    },
+
+    ["Gun"] = {
+
+        ["Enable"] = true,
+
+        ["GunMode"] = false, 
+
+        ["Delay"] = 1.75,
+
+        ["Z"] = {["Enable"] = true, ["HoldTime"] = 0},
+
+        ["X"] = {["Enable"] = true, ["HoldTime"] = 0}
+
+    }
+
+}
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/vuquocoai123/lua/main/LoaderBounty.lua"))()
+ end
 })
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
-local Window = Library:NewWindow("DemonHub")
-local Section = Window:NewSection("Made by Demon")
 
-Section:CreateToggle("Auto Parry", function(value)
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/archangelmich/bladeball/main/beta.lua"))()
-    print(value)
-end)
+
+
+
+local Toggle = AddButton(Main, {
+  Name = "Skip player",
+  Default = false,
+  Callback = function(Value)
+ end
+})
