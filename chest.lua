@@ -1,6 +1,8 @@
 -- Prompt user for key
 local userKey = getKeyFromUser()
-
+    local key = "key123" -- Replace this with actual input method
+    return key
+end
 -- Check if the key is valid
 if not isValidKey(userKey) then
     -- Notify user that the key is invalid
@@ -8,7 +10,6 @@ if not isValidKey(userKey) then
         Title = "Demon";
         Text = "Invalid Key!";
         KeyLink = "",
-        Keys = {"1234"},
         Icon = "";
         Duration = 5;
     })
