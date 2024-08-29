@@ -1,11 +1,11 @@
 loadstring(game:HttpGet(("https://raw.githubusercontent.com/REDzHUB/LibraryV2/main/redzLib")))()
 MakeWindow({
   Hub = {
-    Title = "Tbao Hub | Ball blade ",
-    Animation = "by thaibao7444"
+    Title = "Blade Ball",
+    Animation = "by Jova"
   },
   Key = {
-    KeySystem = false,
+    KeySystem = true,
     Title = "Key System",
     Description = "",
     KeyLink = "",
@@ -13,8 +13,8 @@ MakeWindow({
     Notifi = {
       Notifications = true,
       CorrectKey = "Running the Script...",
-      Incorrectkey = "The key is incorrect",
-      CopyKeyLink = "Copied to Clipboard"
+      Incorrectkey = "Key Not Working",
+      CopyKeyLink = "Copied"
     }
   }
 })
