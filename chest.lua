@@ -1,4 +1,4 @@
-loadstring(game:HttpGet(("https://raw.githubusercontent.com/REDzHUB/LibraryV2/main/redzLib")))()
+loadstring(game:HttpGet(("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard")))()
 MakeWindow({
   Hub = {
     Title = "Blade Ball",
@@ -35,10 +35,10 @@ Duration = 5; -- how long the notification should in secounds
 
 })
 
-local Library = loadstring(Game:HttpGet("https://raw.githubusercontent.com/DemonHubTop/test/main/autochest.lua"))()
+local Library = loadstring(Game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
 
 local Window = Library:NewWindow("DemonHub")
-local Section = Window:NewSection("Build A Boat V1")
+local Section = Window:NewSection("Blade Ball V2")
 
 Section:CreateToggle("Auto Win", function(value)
 loadstring(game:HttpGet("https://raw.githubusercontent.com/DemonHubTop/test/main/autochest.lua"))()
