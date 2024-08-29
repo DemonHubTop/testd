@@ -1,20 +1,26 @@
-loadstring(game:HttpGet(("https://raw.githubusercontent.com/REDzHUB/LibraryV2/main/redzLib")))()
-MakeWindow({
-  Hub = {
-    Title = "DEMON HUB ",
-    Animation = "by Jova"
-  },
-  Key = {
-    KeySystem = true,
-    Title = "Key System",
-    Description = "",
-    KeyLink = "",
-    Keys = {"1234"},
-    Notifi = {
-      Notifications = true,
-      CorrectKey = "Correct key",
-      Incorrectkey = "invaild key",
-      CopyKeyLink = "copy"
+local Window = Rayfield:CreateWindow({
+   Name = "Blade Ball",
+   LoadingTitle = "DemomHub",
+   LoadingSubtitle = "by Jova",
+   ConfigurationSaving = {
+      Enabled = false,
+      FolderName = "Demon",
+      FileName = "Demon"
+   },
+   Discord = {
+      Enabled = true,
+      Invite = "demon-bypass",
+      RememberJoins = true
+   },
+   KeySystem = false,
+   KeySettings = {
+      Title = "Demon Hub",
+      Subtitle = "Key System",
+      Note = "Join My Discord for key (https://discord.gg/demon-bypass)",
+      FileName = "key",
+      SaveKey = true,
+      GrabKeyFromSite = false,
+      Key = "apaaalainico?"
         -- Demon Hub🔥
 
 wait(1.2)
