@@ -1,10 +1,10 @@
--- === SETTINGS ===
+-- SETUP JOIN TEAM DARI GETGENV
 local join = (getgenv and getgenv().join) or "Pirates"
 
--- === SERVICES ===
+-- SERVICES
 local Players = game:GetService("Players")
-local TeleportService = game:GetService("TeleportService")
 local TweenService = game:GetService("TweenService")
+local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -16,14 +16,20 @@ local found = false
 local lastFruitPosition = nil
 local tried = {}
 
--- === AUTO TEAM JOIN ===
-repeat task.wait() until game:IsLoaded() and player.PlayerGui:FindFirstChild("Main")
+-- WAIT UNTIL GAME + REMOTES READY
+repeat task.wait() until game:IsLoaded()
+repeat task.wait() until ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("CommF_")
+repeat task.wait() until player.PlayerGui:FindFirstChild("Main")
+
+-- AUTO TEAM JOIN
 if player.Team == nil and game:GetService("Teams"):FindFirstChild(join) then
-    ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", join)
+    local success = pcall(function()
+        ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", join)
+    end)
 end
 repeat task.wait() until player.Team ~= nil
 
--- === GUI SETUP ===
+-- GUI
 local function createGUI()
     local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
     screenGui.Name = "DemonHubFruitFinder"
@@ -70,7 +76,6 @@ local function createGUI()
     nameLabel.TextXAlignment = Enum.TextXAlignment.Left
     nameLabel.BackgroundTransparency = 1
 
-    -- Floating Intro Text
     local effectLabel = Instance.new("TextLabel", mainFrame)
     effectLabel.Text = "Fruit Finder Activated!"
     effectLabel.Size = UDim2.new(1, 0, 0, 25)
@@ -81,7 +86,6 @@ local function createGUI()
     effectLabel.BackgroundTransparency = 1
     effectLabel.TextTransparency = 1
 
-    -- Animate Effect
     task.spawn(function()
         for i = 1, 0, -0.1 do
             effectLabel.TextTransparency = i
@@ -101,14 +105,14 @@ end
 local gui = createGUI()
 local fruitLabel = gui:WaitForChild("Frame"):WaitForChild("FruitLabel")
 
--- === TELEPORT BYPASS ===
+-- TELEPORT BYPASS
 local function teleportToPosition(pos)
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
     hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
 end
 
--- === FIND FRUIT ===
+-- FIND FRUIT
 local function findFruit()
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == workspace then
@@ -118,7 +122,7 @@ local function findFruit()
     return nil
 end
 
--- === SERVER HOP ===
+-- SERVER HOP
 local function serverHop()
     local gameId = game.PlaceId
     local jobId = game.JobId
@@ -153,7 +157,7 @@ local function serverHop()
     end
 end
 
--- === MAIN LOOP ===
+-- MAIN LOOP
 task.spawn(function()
     while true do
         if found then
@@ -170,6 +174,9 @@ task.spawn(function()
 
             local dist = (humanoidRootPart.Position - lastFruitPosition).Magnitude
             if dist < 10 and not findFruit() then
+                pcall(function()
+                    ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", fruit.Name)
+                end)
                 found = true
                 continue
             end
@@ -183,15 +190,13 @@ task.spawn(function()
     end
 end)
 
--- === ON RESPAWN ===
+-- ON RESPAWN
 player.CharacterAdded:Connect(function(char)
     task.wait(1)
     humanoidRootPart = char:WaitForChild("HumanoidRootPart")
-
     if gui and not gui.Parent then
         gui.Parent = player:WaitForChild("PlayerGui")
     end
-
     if lastFruitPosition and not found then
         teleportToPosition(lastFruitPosition)
     end
