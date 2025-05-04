@@ -1,18 +1,21 @@
--- Services
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
+local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 local joinTeam = getgenv().join or "Pirates"
+local webhookUrl = getgenv().webhook or ""
+local CommF_ = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
 
--- Auto Join Team
+-- ✅ Auto Join Team
 pcall(function()
-    ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", joinTeam)
+    CommF_:InvokeServer("SetTeam", joinTeam)
 end)
 
--- GUI Setup
+-- ✅ GUI
 local function createGUI()
     local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
     gui.Name = "DemonHub"
@@ -38,17 +41,6 @@ local function createGUI()
     fruitLabel.Font = Enum.Font.Gotham
     fruitLabel.TextXAlignment = Enum.TextXAlignment.Left
     fruitLabel.BackgroundTransparency = 1
-    fruitLabel.Name = "FruitLabel"
-
-    local expLabel = Instance.new("TextLabel", frame)
-    expLabel.Position = UDim2.new(0, 10, 0, 65)
-    expLabel.Size = UDim2.new(1, -20, 0, 20)
-    expLabel.Text = "EXP MODE"
-    expLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    expLabel.Font = Enum.Font.Gotham
-    expLabel.TextSize = 14
-    expLabel.TextXAlignment = Enum.TextXAlignment.Left
-    expLabel.BackgroundTransparency = 1
 
     local avatar = Instance.new("ImageLabel", frame)
     avatar.Size = UDim2.new(0, 40, 0, 40)
@@ -71,15 +63,37 @@ end
 
 local fruitLabel = createGUI()
 
--- Webhook Logger
-local function sendWebhook(fruitName)
-    if not getgenv().webhook or getgenv().webhook == "" then return end
+-- ✅ Teleport
+local function teleportTo(pos)
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
+end
 
+-- ✅ Store Fruit
+local function storeFruit(tool)
+    if tool:IsA("Tool") and tool:FindFirstChild("Fruit") then
+        CommF_:InvokeServer("StoreFruit", tool.Name, tool)
+    end
+end
+
+local function storeAllFruits()
+    for _, tool in pairs(player.Backpack:GetChildren()) do
+        storeFruit(tool)
+    end
+    for _, tool in pairs(player.Character:GetChildren()) do
+        storeFruit(tool)
+    end
+end
+
+-- ✅ Webhook Log
+local function sendWebhook(fruitName)
+    if webhookUrl == "" then return end
     local data = {
-        ["username"] = "DemonHub Logger",
+        ["username"] = "DemonHub",
         ["embeds"] = {{
-            ["title"] = "**Fruit Collected!**",
-            ["color"] = 0x00ff00,
+            ["title"] = "Fruit Collected!",
+            ["color"] = 65280,
             ["fields"] = {
                 {
                     ["name"] = "Fruit",
@@ -93,99 +107,43 @@ local function sendWebhook(fruitName)
                 }
             },
             ["footer"] = {
-                ["text"] = "DemonHub | Fruit Finder"
+                ["text"] = "DemonHub Logger"
             },
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            ["timestamp"] = DateTime.now():ToIsoDate()
         }}
     }
-
-    local json = HttpService:JSONEncode(data)
-    HttpService:PostAsync(getgenv().webhook, json, Enum.HttpContentType.ApplicationJson)
+    local jsonData = HttpService:JSONEncode(data)
+    HttpService:PostAsync(webhookUrl, jsonData)
 end
 
--- Teleport
-local function teleportTo(pos)
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:WaitForChild("HumanoidRootPart")
-    hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
-end
-
--- Store Fruit
-local function storeFruit()
-    local CommF_ = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
-
-    for _, tool in pairs(player.Backpack:GetChildren()) do
-        if tool:IsA("Tool") then
-            CommF_:InvokeServer("StoreFruit", tool.Name)
+-- ✅ Get all fruits
+local function getAllFruits()
+    local fruits = {}
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == Workspace then
+            table.insert(fruits, obj)
         end
     end
-
-    local character = player.Character
-    if character then
-        for _, tool in pairs(character:GetChildren()) do
-            if tool:IsA("Tool") then
-                CommF_:InvokeServer("StoreFruit", tool.Name)
-            end
-        end
-    end
+    return fruits
 end
 
--- Find Fruit
-local function findFruit()
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == workspace then
-            return obj
-        end
-    end
-    return nil
-end
-
--- Server Hop
-local tried = {}
-local function hopServer()
-    local gameId = game.PlaceId
-    local jobId = game.JobId
-    local cursor = ""
-    local servers = {}
-
-    repeat
-        local url = "https://games.roblox.com/v1/games/" .. gameId .. "/servers/Public?sortOrder=2&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or "")
-        local response = HttpService:JSONDecode(game:HttpGet(url))
-        for _, v in pairs(response.data) do
-            if v.playing < v.maxPlayers and v.id ~= jobId and not tried[v.id] then
-                table.insert(servers, v.id)
-            end
-        end
-        cursor = response.nextPageCursor
-    until not cursor or #servers >= 5
-
-    if #servers > 0 then
-        local pick = servers[math.random(1, #servers)]
-        tried[pick] = true
-        TeleportService:TeleportToPlaceInstance(gameId, pick, player)
-    else
-        task.wait(5)
-        hopServer()
-    end
-end
-
--- Main Loop
+-- ✅ Main Loop
 task.spawn(function()
     while true do
-        local fruit = findFruit()
-        if fruit then
-            fruitLabel.Text = "Fruit: " .. fruit.Name
-            teleportTo(fruit.Handle.Position)
-            task.wait(2.5)
-            storeFruit()
-            sendWebhook(fruit.Name)
-            fruitLabel.Text = "Fruit: Stored"
-            task.wait(2)
+        local foundFruits = getAllFruits()
+        if #foundFruits > 0 then
+            for _, fruit in pairs(foundFruits) do
+                fruitLabel.Text = "Fruit: " .. fruit.Name
+                teleportTo(fruit.Handle.Position)
+                task.wait(3)
+                storeAllFruits()
+                sendWebhook(fruit.Name)
+                fruitLabel.Text = "Fruit Stored!"
+                task.wait(1.5)
+            end
         else
             fruitLabel.Text = "Fruit: None"
-            task.wait(10)
-            hopServer()
         end
-        task.wait(2)
+        task.wait(10)
     end
 end)
