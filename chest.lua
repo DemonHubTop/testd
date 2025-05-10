@@ -15,7 +15,7 @@ pcall(function()
     ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", joinTeam)
 end)
 
--- GUI Setup
+-- GUI
 local function createGUI()
     local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
     gui.Name = "DemonHub"
@@ -62,7 +62,7 @@ end
 
 createGUI()
 
--- Webhook kirim saat teleport
+-- Webhook saat teleport ke buah
 local function sendWebhook(fruitName)
     if webhook == "" or not string.find(webhook, "http") then return end
     local payload = {
@@ -82,58 +82,52 @@ local function sendWebhook(fruitName)
         }}
     }
 
-    local success, err = pcall(function()
+    pcall(function()
         HttpService:RequestAsync({
             Url = webhook,
             Method = "POST",
-            Headers = {
-                ["Content-Type"] = "application/json"
-            },
+            Headers = {["Content-Type"] = "application/json"},
             Body = HttpService:JSONEncode(payload)
         })
     end)
-
-    if success then
-        print("[Webhook] Sent:", fruitName)
-    else
-        warn("[Webhook] Failed:", err)
-    end
 end
 
--- Teleport ke buah
-local function teleportTo(position)
+-- Teleport
+local function teleportTo(pos)
     local char = player.Character or player.CharacterAdded:Wait()
-    local root = char:WaitForChild("HumanoidRootPart")
-    root.CFrame = CFrame.new(position + Vector3.new(0, 5, 0))
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
 end
 
--- Store dari tangan
+-- Store Fruit dari tangan
 local function storeFruit()
     local Remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
     local char = player.Character
     if not char then return end
 
-    for _, tool in pairs(char:GetChildren()) do
-        if tool:IsA("Tool") and tool:FindFirstChild("Fruit") then
+    for _, tool in ipairs(char:GetChildren()) do
+        if tool:IsA("Tool") and (tool:FindFirstChild("Fruit") or tool:FindFirstChild("Handle")) then
+            local fruitName = tool.Name
             local success, result = pcall(function()
-                return Remote:InvokeServer("StoreFruit", tool.Name, tool)
+                return Remote:InvokeServer("StoreFruit", fruitName, tool)
             end)
+
             if success and result == true then
+                print("[Store] Success:", fruitName)
                 fruitLabel.Text = "Fruit: Stored"
-                print("[Store] Success:", tool.Name)
                 task.delay(5, function()
                     if fruitLabel.Text == "Fruit: Stored" then
                         fruitLabel.Text = "Fruit: None"
                     end
                 end)
             else
-                warn("[Store] Failed:", tool.Name)
+                warn("[Store] Failed:", fruitName, result)
             end
         end
     end
 end
 
--- Cari buah di world
+-- Auto detect buah
 local function findFruit()
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == workspace then
@@ -143,10 +137,10 @@ local function findFruit()
     return nil
 end
 
--- Server Hop
+-- Hop Server
 local function hopServer()
     local gameId, jobId = game.PlaceId, game.JobId
-    local cursor, servers = "", {}
+    local servers, cursor = {}, ""
 
     repeat
         local url = "https://games.roblox.com/v1/games/" .. gameId .. "/servers/Public?sortOrder=2&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or "")
@@ -169,7 +163,7 @@ local function hopServer()
     end
 end
 
--- MAIN LOOP
+-- Main Search Loop
 task.spawn(function()
     while true do
         local fruit = findFruit()
@@ -178,12 +172,19 @@ task.spawn(function()
             teleportTo(fruit.Handle.Position)
             sendWebhook(fruit.Name)
             task.wait(3)
-            storeFruit()
         else
             fruitLabel.Text = "Fruit: None"
             task.wait(10)
             hopServer()
         end
         task.wait(2)
+    end
+end)
+
+-- Auto Store Loop
+task.spawn(function()
+    while true do
+        storeFruit()
+        task.wait(1.5)
     end
 end)
