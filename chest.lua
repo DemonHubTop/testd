@@ -2,38 +2,71 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
+local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 local webhook = getgenv().webhook or ""
 local joinTeam = getgenv().join or "Pirates"
-local fruitLabel
 local triedServers = {}
+local fruitLabel
 
--- Join Team
+-- Auto Join Team
 pcall(function()
     ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", joinTeam)
 end)
 
--- GUI
+-- GUI MODERN TENGAH
 local function createGUI()
     local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
     gui.Name = "DemonHub"
+    gui.ResetOnSpawn = false
 
     local frame = Instance.new("Frame", gui)
-    frame.Position = UDim2.new(0, 20, 0, 20)
-    frame.Size = UDim2.new(0, 300, 0, 110)
-    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    frame.Name = "MainFrame"
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    frame.Size = UDim2.new(0, 420, 0, 170)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    frame.BorderSizePixel = 0
+    frame.BackgroundTransparency = 0.05
+    frame.ClipsDescendants = true
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 
     local title = Instance.new("TextLabel", frame)
     title.Text = "DEMONHUB | FRUIT FINDER"
-    title.Size = UDim2.new(1, 0, 0, 30)
+    title.Size = UDim2.new(1, -40, 0, 30)
+    title.Position = UDim2.new(0, 10, 0, 5)
     title.BackgroundTransparency = 1
-    title.TextColor3 = Color3.fromRGB(255, 0, 0)
+    title.TextColor3 = Color3.fromRGB(255, 100, 100)
     title.Font = Enum.Font.GothamBold
     title.TextScaled = true
 
+    local closeBtn = Instance.new("TextButton", frame)
+    closeBtn.Text = "✕"
+    closeBtn.Size = UDim2.new(0, 28, 0, 28)
+    closeBtn.Position = UDim2.new(1, -35, 0, 5)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.TextSize = 16
+    closeBtn.MouseButton1Click:Connect(function()
+        frame.Visible = false
+    end)
+
+    local openBtn = Instance.new("TextButton", gui)
+    openBtn.Text = "☰"
+    openBtn.Size = UDim2.new(0, 35, 0, 35)
+    openBtn.Position = UDim2.new(0, 10, 1, -45)
+    openBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    openBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    openBtn.Font = Enum.Font.GothamBold
+    openBtn.TextSize = 18
+    openBtn.MouseButton1Click:Connect(function()
+        frame.Visible = not frame.Visible
+    end)
+
     fruitLabel = Instance.new("TextLabel", frame)
-    fruitLabel.Position = UDim2.new(0, 10, 0, 35)
+    fruitLabel.Position = UDim2.new(0, 10, 0, 45)
     fruitLabel.Size = UDim2.new(1, -20, 0, 25)
     fruitLabel.Text = "Fruit: None"
     fruitLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -43,15 +76,15 @@ local function createGUI()
     fruitLabel.BackgroundTransparency = 1
 
     local avatar = Instance.new("ImageLabel", frame)
-    avatar.Size = UDim2.new(0, 40, 0, 40)
-    avatar.Position = UDim2.new(0, 10, 1, -45)
+    avatar.Size = UDim2.new(0, 50, 0, 50)
+    avatar.Position = UDim2.new(0, 10, 1, -60)
     avatar.BackgroundTransparency = 1
     avatar.Image = "rbxthumb://type=AvatarHeadShot&id=" .. player.UserId .. "&w=150&h=150"
 
     local username = Instance.new("TextLabel", frame)
-    username.Position = UDim2.new(0, 60, 1, -35)
-    username.Size = UDim2.new(0, 200, 0, 20)
-    username.Text = player.Name
+    username.Position = UDim2.new(0, 70, 1, -45)
+    username.Size = UDim2.new(1, -80, 0, 20)
+    username.Text = "User: " .. player.Name
     username.TextColor3 = Color3.fromRGB(200, 200, 200)
     username.Font = Enum.Font.Gotham
     username.TextSize = 16
@@ -98,8 +131,8 @@ end
 
 -- Find Fruit
 local function findFruit()
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == workspace then
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == Workspace then
             return obj
         end
     end
@@ -131,7 +164,7 @@ local function hopServer()
     end
 end
 
--- Main Search Loop
+-- Loop Find + Teleport
 task.spawn(function()
     while true do
         local fruit = findFruit()
@@ -149,18 +182,17 @@ task.spawn(function()
     end
 end)
 
--- ✅ AUTO STORE LOOP (PAKAI VERSIMU)
-spawn(function()
+-- Auto Store
+task.spawn(function()
     while task.wait(1.5) do
         pcall(function()
             if getgenv().AutoStoreFruit then
-                local plr = Players.LocalPlayer
-                for _, v in pairs(plr.Backpack:GetChildren()) do
+                for _, v in pairs(player.Backpack:GetChildren()) do
                     if string.find(v.Name, "Fruit") then
-                        local fruitRaw = v.Name
-                        local cleanName = string.gsub(fruitRaw, " Fruit", "")
-                        local finalName = cleanName .. "-" .. cleanName
-                        ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", finalName, v)
+                        local raw = v.Name
+                        local short = string.gsub(raw, " Fruit", "")
+                        local full = short .. "-" .. short
+                        ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", full, v)
                         fruitLabel.Text = "Fruit: Stored"
                         task.delay(5, function()
                             if fruitLabel.Text == "Fruit: Stored" then
