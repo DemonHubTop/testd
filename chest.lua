@@ -62,40 +62,52 @@ end
 
 createGUI()
 
--- Webhook kirim saat teleport ke buah
+-- Webhook kirim saat teleport
 local function sendWebhook(fruitName)
-    if webhook == "" then return end
-    local data = {
+    if webhook == "" or not string.find(webhook, "http") then return end
+    local payload = {
         ["embeds"] = {{
             ["title"] = "Fruit Detected!",
             ["color"] = 65280,
             ["fields"] = {
-                {["name"] = "Fruit", ["value"] = fruitName},
-                {["name"] = "Player", ["value"] = player.Name}
+                {["name"] = "Fruit", ["value"] = fruitName, ["inline"] = true},
+                {["name"] = "Player", ["value"] = player.Name, ["inline"] = true}
             },
             ["thumbnail"] = {
                 ["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=150&height=150"
+            },
+            ["footer"] = {
+                ["text"] = "DemonHub | Fruit Finder"
             }
         }}
     }
+
     local success, err = pcall(function()
-        HttpService:PostAsync(webhook, HttpService:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
+        HttpService:RequestAsync({
+            Url = webhook,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = HttpService:JSONEncode(payload)
+        })
     end)
+
     if success then
         print("[Webhook] Sent:", fruitName)
     else
-        warn("[Webhook] Error:", err)
+        warn("[Webhook] Failed:", err)
     end
 end
 
--- Teleport ke buah (bypass)
+-- Teleport ke buah
 local function teleportTo(position)
     local char = player.Character or player.CharacterAdded:Wait()
     local root = char:WaitForChild("HumanoidRootPart")
     root.CFrame = CFrame.new(position + Vector3.new(0, 5, 0))
 end
 
--- Store buah jika ada di tangan
+-- Store dari tangan
 local function storeFruit()
     local Remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
     local char = player.Character
@@ -107,10 +119,12 @@ local function storeFruit()
                 return Remote:InvokeServer("StoreFruit", tool.Name, tool)
             end)
             if success and result == true then
-                print("[Store] Success:", tool.Name)
                 fruitLabel.Text = "Fruit: Stored"
+                print("[Store] Success:", tool.Name)
                 task.delay(5, function()
-                    fruitLabel.Text = "Fruit: None"
+                    if fruitLabel.Text == "Fruit: Stored" then
+                        fruitLabel.Text = "Fruit: None"
+                    end
                 end)
             else
                 warn("[Store] Failed:", tool.Name)
@@ -119,7 +133,7 @@ local function storeFruit()
     end
 end
 
--- Cari buah di map
+-- Cari buah di world
 local function findFruit()
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == workspace then
@@ -129,7 +143,7 @@ local function findFruit()
     return nil
 end
 
--- Hop Server
+-- Server Hop
 local function hopServer()
     local gameId, jobId = game.PlaceId, game.JobId
     local cursor, servers = "", {}
@@ -155,7 +169,7 @@ local function hopServer()
     end
 end
 
--- Main Loop
+-- MAIN LOOP
 task.spawn(function()
     while true do
         local fruit = findFruit()
