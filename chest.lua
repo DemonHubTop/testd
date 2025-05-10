@@ -2,7 +2,6 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 local webhook = getgenv().webhook or ""
@@ -10,7 +9,7 @@ local joinTeam = getgenv().join or "Pirates"
 local fruitLabel
 local triedServers = {}
 
--- Auto Join Team
+-- Join Team
 pcall(function()
     ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", joinTeam)
 end)
@@ -62,10 +61,10 @@ end
 
 createGUI()
 
--- Webhook saat teleport ke buah
+-- Webhook
 local function sendWebhook(fruitName)
-    if webhook == "" or not string.find(webhook, "http") then return end
-    local payload = {
+    if webhook == "" then return end
+    local data = {
         ["embeds"] = {{
             ["title"] = "Fruit Detected!",
             ["color"] = 65280,
@@ -76,9 +75,7 @@ local function sendWebhook(fruitName)
             ["thumbnail"] = {
                 ["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=150&height=150"
             },
-            ["footer"] = {
-                ["text"] = "DemonHub | Fruit Finder"
-            }
+            ["footer"] = {["text"] = "DemonHub | Fruit Finder"}
         }}
     }
 
@@ -87,7 +84,7 @@ local function sendWebhook(fruitName)
             Url = webhook,
             Method = "POST",
             Headers = {["Content-Type"] = "application/json"},
-            Body = HttpService:JSONEncode(payload)
+            Body = HttpService:JSONEncode(data)
         })
     end)
 end
@@ -99,37 +96,9 @@ local function teleportTo(pos)
     hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
 end
 
--- Store Fruit dari tangan
-local function storeFruit()
-    local Remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
-    local char = player.Character
-    if not char then return end
-
-    for _, tool in ipairs(char:GetChildren()) do
-        if tool:IsA("Tool") and (tool:FindFirstChild("Fruit") or tool:FindFirstChild("Handle")) then
-            local fruitName = tool.Name
-            local success, result = pcall(function()
-                return Remote:InvokeServer("StoreFruit", fruitName, tool)
-            end)
-
-            if success and result == true then
-                print("[Store] Success:", fruitName)
-                fruitLabel.Text = "Fruit: Stored"
-                task.delay(5, function()
-                    if fruitLabel.Text == "Fruit: Stored" then
-                        fruitLabel.Text = "Fruit: None"
-                    end
-                end)
-            else
-                warn("[Store] Failed:", fruitName, result)
-            end
-        end
-    end
-end
-
--- Auto detect buah
+-- Find Fruit
 local function findFruit()
-    for _, obj in pairs(workspace:GetDescendants()) do
+    for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == workspace then
             return obj
         end
@@ -137,20 +106,19 @@ local function findFruit()
     return nil
 end
 
--- Hop Server
+-- Server Hop
 local function hopServer()
     local gameId, jobId = game.PlaceId, game.JobId
     local servers, cursor = {}, ""
-
     repeat
         local url = "https://games.roblox.com/v1/games/" .. gameId .. "/servers/Public?sortOrder=2&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or "")
-        local response = HttpService:JSONDecode(game:HttpGet(url))
-        for _, v in pairs(response.data) do
+        local body = HttpService:JSONDecode(game:HttpGet(url))
+        for _, v in ipairs(body.data) do
             if v.playing < v.maxPlayers and v.id ~= jobId and not triedServers[v.id] then
                 table.insert(servers, v.id)
             end
         end
-        cursor = response.nextPageCursor
+        cursor = body.nextPageCursor
     until not cursor or #servers >= 5
 
     if #servers > 0 then
@@ -181,10 +149,27 @@ task.spawn(function()
     end
 end)
 
--- Auto Store Loop
-task.spawn(function()
-    while true do
-        storeFruit()
-        task.wait(1.5)
+-- ✅ AUTO STORE LOOP (PAKAI VERSIMU)
+spawn(function()
+    while task.wait(1.5) do
+        pcall(function()
+            if getgenv().AutoStoreFruit then
+                local plr = Players.LocalPlayer
+                for _, v in pairs(plr.Backpack:GetChildren()) do
+                    if string.find(v.Name, "Fruit") then
+                        local fruitRaw = v.Name
+                        local cleanName = string.gsub(fruitRaw, " Fruit", "")
+                        local finalName = cleanName .. "-" .. cleanName
+                        ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", finalName, v)
+                        fruitLabel.Text = "Fruit: Stored"
+                        task.delay(5, function()
+                            if fruitLabel.Text == "Fruit: Stored" then
+                                fruitLabel.Text = "Fruit: None"
+                            end
+                        end)
+                    end
+                end
+            end
+        end)
     end
 end)
