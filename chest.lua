@@ -157,24 +157,42 @@ local function findFruit()
 end
 
 function hopServer()
-    local gameId, jobId = game.PlaceId, game.JobId
-    local servers, cursor = {}, ""
-    repeat
-        local url = "https://games.roblox.com/v1/games/" .. gameId .. "/servers/Public?sortOrder=2&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or "")
-        local body = HttpService:JSONDecode(game:HttpGet(url))
-        for _, v in ipairs(body.data) do
-            if v.playing < v.maxPlayers and v.id ~= jobId and not triedServers[v.id] then
-                table.insert(servers, v.id)
+    local gameId = game.PlaceId
+    local jobId = game.JobId
+    local servers = {}
+    local cursor = ""
+    local found = false
+
+    for attempt = 1, 5 do
+        local url = "https://games.roblox.com/v1/games/"..gameId.."/servers/Public?sortOrder=2&limit=100"..(cursor ~= "" and "&cursor="..cursor or "")
+        local success, result = pcall(function()
+            return HttpService:JSONDecode(game:HttpGet(url))
+        end)
+
+        if success and result and result.data then
+            for _, server in pairs(result.data) do
+                if server.id ~= jobId and server.playing < server.maxPlayers and not triedServers[server.id] then
+                    table.insert(servers, server.id)
+                end
             end
+            cursor = result.nextPageCursor
+        else
+            warn("[Hop] Failed to get server list. Retrying...")
         end
-        cursor = body.nextPageCursor
-    until not cursor or #servers >= 5
+
+        if #servers > 0 then break end
+        task.wait(1)
+    end
 
     if #servers > 0 then
-        local pick = servers[math.random(1, #servers)]
-        triedServers[pick] = true
-        TeleportService:TeleportToPlaceInstance(gameId, pick, player)
+        local target = servers[math.random(1, #servers)]
+        triedServers[target] = true
+        print("[Hop] Teleporting to:", target)
+        pcall(function()
+            TeleportService:TeleportToPlaceInstance(gameId, target, Players.LocalPlayer)
+        end)
     else
+        warn("[Hop] No valid server found. Retrying in 5s.")
         task.wait(5)
         hopServer()
     end
