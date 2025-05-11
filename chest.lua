@@ -10,12 +10,12 @@ local joinTeam = getgenv().join or "Pirates"
 local triedServers = {}
 local fruitLabel
 
--- Join team
+-- Auto Join Team
 pcall(function()
     ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", joinTeam)
 end)
 
--- GUI setup
+-- GUI Setup
 local function createGUI()
     local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
     gui.Name = "DemonHub"
@@ -92,7 +92,7 @@ end
 
 createGUI()
 
--- Webhook
+-- Webhook Function
 local function sendWebhook(fruitName)
     if webhook == "" then return end
     local data = {
@@ -127,7 +127,7 @@ local function teleportTo(pos)
     hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
 end
 
--- Store dari backpack & tangan
+-- Store Fruit
 local function storeAllFruits()
     local Remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
     local containers = {
@@ -155,7 +155,7 @@ local function storeAllFruits()
     end
 end
 
--- Cari buah
+-- Cari Buah
 local function findFruit()
     for _, obj in ipairs(Workspace:GetDescendants()) do
         if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == Workspace then
@@ -165,7 +165,7 @@ local function findFruit()
     return nil
 end
 
--- Server hop
+-- Server Hop
 local function hopServer()
     local gameId, jobId = game.PlaceId, game.JobId
     local servers, cursor = {}, ""
@@ -190,7 +190,7 @@ local function hopServer()
     end
 end
 
--- Loop utama
+-- Main Loop: Teleport + Store
 task.spawn(function()
     while true do
         local fruit = findFruit()
@@ -204,6 +204,16 @@ task.spawn(function()
             fruitLabel.Text = "Fruit: None"
             task.wait(10)
             hopServer()
+        end
+        task.wait(2)
+    end
+end)
+
+-- Loop Store 2s
+task.spawn(function()
+    while true do
+        if getgenv().AutoStoreFruit then
+            storeAllFruits()
         end
         task.wait(2)
     end
