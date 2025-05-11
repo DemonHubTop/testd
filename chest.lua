@@ -10,12 +10,12 @@ local joinTeam = getgenv().join or "Pirates"
 local triedServers = {}
 local fruitLabel
 
--- Auto Join Team
+-- Join team
 pcall(function()
     ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", joinTeam)
 end)
 
--- GUI MODERN TENGAH
+-- GUI setup
 local function createGUI()
     local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
     gui.Name = "DemonHub"
@@ -28,8 +28,6 @@ local function createGUI()
     frame.Size = UDim2.new(0, 420, 0, 170)
     frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     frame.BorderSizePixel = 0
-    frame.BackgroundTransparency = 0.05
-    frame.ClipsDescendants = true
     Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 
     local title = Instance.new("TextLabel", frame)
@@ -129,7 +127,35 @@ local function teleportTo(pos)
     hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
 end
 
--- Find Fruit
+-- Store dari backpack & tangan
+local function storeAllFruits()
+    local Remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
+    local containers = {
+        player.Backpack,
+        player.Character or player.CharacterAdded:Wait()
+    }
+
+    for _, container in pairs(containers) do
+        for _, item in pairs(container:GetChildren()) do
+            if item:IsA("Tool") and string.find(item.Name, "Fruit") then
+                local raw = item.Name
+                local short = string.gsub(raw, " Fruit", "")
+                local full = short .. "-" .. short
+                pcall(function()
+                    Remote:InvokeServer("StoreFruit", full, item)
+                end)
+                fruitLabel.Text = "Fruit: Stored"
+                task.delay(5, function()
+                    if fruitLabel.Text == "Fruit: Stored" then
+                        fruitLabel.Text = "Fruit: None"
+                    end
+                end)
+            end
+        end
+    end
+end
+
+-- Cari buah
 local function findFruit()
     for _, obj in ipairs(Workspace:GetDescendants()) do
         if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == Workspace then
@@ -139,7 +165,7 @@ local function findFruit()
     return nil
 end
 
--- Server Hop
+-- Server hop
 local function hopServer()
     local gameId, jobId = game.PlaceId, game.JobId
     local servers, cursor = {}, ""
@@ -164,7 +190,7 @@ local function hopServer()
     end
 end
 
--- Loop Find + Teleport
+-- Loop utama
 task.spawn(function()
     while true do
         local fruit = findFruit()
@@ -173,35 +199,12 @@ task.spawn(function()
             teleportTo(fruit.Handle.Position)
             sendWebhook(fruit.Name)
             task.wait(3)
+            storeAllFruits()
         else
             fruitLabel.Text = "Fruit: None"
             task.wait(10)
             hopServer()
         end
         task.wait(2)
-    end
-end)
-
--- Auto Store
-task.spawn(function()
-    while task.wait(1.5) do
-        pcall(function()
-            if getgenv().AutoStoreFruit then
-                for _, v in pairs(player.Backpack:GetChildren()) do
-                    if string.find(v.Name, "Fruit") then
-                        local raw = v.Name
-                        local short = string.gsub(raw, " Fruit", "")
-                        local full = short .. "-" .. short
-                        ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", full, v)
-                        fruitLabel.Text = "Fruit: Stored"
-                        task.delay(5, function()
-                            if fruitLabel.Text == "Fruit: Stored" then
-                                fruitLabel.Text = "Fruit: None"
-                            end
-                        end)
-                    end
-                end
-            end
-        end)
     end
 end)
