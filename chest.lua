@@ -1,7 +1,5 @@
--- Init GetGenv
 getgenv().hop = getgenv().hop or 10
 
--- Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeleportService = game:GetService("TeleportService")
@@ -14,12 +12,10 @@ local joinTeam = getgenv().join or "Pirates"
 local triedServers = {}
 local fruitLabel
 
--- Join Team
 pcall(function()
     ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", joinTeam)
 end)
 
--- GUI
 local function createGUI()
     local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
     gui.Name = "DemonHub"
@@ -94,7 +90,6 @@ end
 
 createGUI()
 
--- Webhook
 local function sendWebhook(fruitName)
     if webhook == "" then return end
     local data = {
@@ -122,18 +117,15 @@ local function sendWebhook(fruitName)
     end)
 end
 
--- Teleport
 local function teleportTo(pos)
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
     hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
 end
 
--- Store Fruits
 local function storeAllFruits()
     local Remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
     local containers = {player.Backpack, player.Character or player.CharacterAdded:Wait()}
-    local storeFailed = false
 
     for _, container in pairs(containers) do
         for _, item in pairs(container:GetChildren()) do
@@ -141,33 +133,20 @@ local function storeAllFruits()
                 local raw = item.Name
                 local short = string.gsub(raw, " Fruit", "")
                 local full = short .. "-" .. short
-                local success, result = pcall(function()
-                    return Remote:InvokeServer("StoreFruit", full, item)
+                pcall(function()
+                    Remote:InvokeServer("StoreFruit", full, item)
                 end)
-
-                if success and result == true then
-                    fruitLabel.Text = "Fruit: Stored"
-                else
-                    storeFailed = true
-                end
+                fruitLabel.Text = "Fruit: Stored"
+                task.delay(5, function()
+                    if fruitLabel.Text == "Fruit: Stored" then
+                        fruitLabel.Text = "Fruit: None"
+                    end
+                end)
             end
         end
     end
-
-    if storeFailed then
-        fruitLabel.Text = "Storage Full"
-        task.wait(getgenv().hop)
-        hopServer()
-    else
-        task.delay(5, function()
-            if fruitLabel.Text == "Fruit: Stored" then
-                fruitLabel.Text = "Fruit: None"
-            end
-        end)
-    end
 end
 
--- Cari Buah
 local function findFruit()
     for _, obj in ipairs(Workspace:GetDescendants()) do
         if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == Workspace then
@@ -177,7 +156,6 @@ local function findFruit()
     return nil
 end
 
--- Server Hop
 function hopServer()
     local gameId, jobId = game.PlaceId, game.JobId
     local servers, cursor = {}, ""
@@ -202,7 +180,6 @@ function hopServer()
     end
 end
 
--- Loop Utama
 task.spawn(function()
     while true do
         local fruit = findFruit()
@@ -214,14 +191,13 @@ task.spawn(function()
             storeAllFruits()
         else
             fruitLabel.Text = "Fruit: None"
-            task.wait(10)
+            task.wait(getgenv().hop)
             hopServer()
         end
         task.wait(2)
     end
 end)
 
--- Loop Store
 task.spawn(function()
     while true do
         if getgenv().AutoStoreFruit then
@@ -231,7 +207,6 @@ task.spawn(function()
     end
 end)
 
--- Notifikasi Kanan Bawah
 local function showNotification()
     local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
     gui.Name = "DemonHubNotify"
