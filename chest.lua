@@ -1,3 +1,4 @@
+-- Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeleportService = game:GetService("TeleportService")
@@ -10,19 +11,18 @@ local joinTeam = getgenv().join or "Pirates"
 local triedServers = {}
 local fruitLabel
 
--- Auto Join Team
+-- Join Team
 pcall(function()
     ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", joinTeam)
 end)
 
--- GUI Setup
+-- GUI
 local function createGUI()
     local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
     gui.Name = "DemonHub"
     gui.ResetOnSpawn = false
 
     local frame = Instance.new("Frame", gui)
-    frame.Name = "MainFrame"
     frame.AnchorPoint = Vector2.new(0.5, 0.5)
     frame.Position = UDim2.new(0.5, 0, 0.5, 0)
     frame.Size = UDim2.new(0, 420, 0, 170)
@@ -34,18 +34,18 @@ local function createGUI()
     title.Text = "DEMONHUB | FRUIT FINDER"
     title.Size = UDim2.new(1, -40, 0, 30)
     title.Position = UDim2.new(0, 10, 0, 5)
-    title.BackgroundTransparency = 1
     title.TextColor3 = Color3.fromRGB(255, 100, 100)
     title.Font = Enum.Font.GothamBold
     title.TextScaled = true
+    title.BackgroundTransparency = 1
 
     local closeBtn = Instance.new("TextButton", frame)
     closeBtn.Text = "✕"
     closeBtn.Size = UDim2.new(0, 28, 0, 28)
     closeBtn.Position = UDim2.new(1, -35, 0, 5)
     closeBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
-    closeBtn.Font = Enum.Font.GothamBold
     closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.Font = Enum.Font.GothamBold
     closeBtn.TextSize = 16
     closeBtn.MouseButton1Click:Connect(function()
         frame.Visible = false
@@ -92,7 +92,7 @@ end
 
 createGUI()
 
--- Webhook Function
+-- Webhook
 local function sendWebhook(fruitName)
     if webhook == "" then return end
     local data = {
@@ -127,22 +127,17 @@ local function teleportTo(pos)
     hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
 end
 
--- Store Fruit
+-- Store
 local function storeAllFruits()
     local Remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
-    local containers = {
-        player.Backpack,
-        player.Character or player.CharacterAdded:Wait()
-    }
-
-    for _, container in pairs(containers) do
-        for _, item in pairs(container:GetChildren()) do
-            if item:IsA("Tool") and string.find(item.Name, "Fruit") then
-                local raw = item.Name
-                local short = string.gsub(raw, " Fruit", "")
-                local full = short .. "-" .. short
+    local containers = {player.Backpack, player.Character or player.CharacterAdded:Wait()}
+    for _, c in pairs(containers) do
+        for _, i in pairs(c:GetChildren()) do
+            if i:IsA("Tool") and string.find(i.Name, "Fruit") then
+                local name = i.Name:gsub(" Fruit", "")
+                local full = name .. "-" .. name
                 pcall(function()
-                    Remote:InvokeServer("StoreFruit", full, item)
+                    Remote:InvokeServer("StoreFruit", full, i)
                 end)
                 fruitLabel.Text = "Fruit: Stored"
                 task.delay(5, function()
@@ -190,7 +185,7 @@ local function hopServer()
     end
 end
 
--- Main Loop: Teleport + Store
+-- Main Loop
 task.spawn(function()
     while true do
         local fruit = findFruit()
@@ -209,7 +204,7 @@ task.spawn(function()
     end
 end)
 
--- Loop Store 2s
+-- Loop Store
 task.spawn(function()
     while true do
         if getgenv().AutoStoreFruit then
@@ -218,3 +213,48 @@ task.spawn(function()
         task.wait(2)
     end
 end)
+
+-- Notification Made by Jova
+local function showNotification()
+    local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+    gui.Name = "DemonHubNotify"
+    gui.ResetOnSpawn = false
+
+    local frame = Instance.new("Frame", gui)
+    frame.AnchorPoint = Vector2.new(1, 1)
+    frame.Position = UDim2.new(1, -10, 1, -10)
+    frame.Size = UDim2.new(0, 250, 0, 80)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+
+    local label = Instance.new("TextLabel", frame)
+    label.Text = "Made by Jova"
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 18
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, -10, 0, 30)
+    label.Position = UDim2.new(0, 10, 0, 5)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local button = Instance.new("TextButton", frame)
+    button.Text = "Copy Discord"
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 16
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    button.Size = UDim2.new(0, 150, 0, 30)
+    button.Position = UDim2.new(0, 10, 1, -40)
+    Instance.new("UICorner", button)
+
+    button.MouseButton1Click:Connect(function()
+        setclipboard("https://discord.gg/5S7vNWEn5e")
+        button.Text = "Copied!"
+    end)
+
+    task.delay(5, function()
+        gui:Destroy()
+    end)
+end
+
+showNotification()
