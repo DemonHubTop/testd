@@ -1,6 +1,3 @@
-getgenv().hop = getgenv().hop or 10
-getgenv().AutoStoreFruit = true
-
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeleportService = game:GetService("TeleportService")
