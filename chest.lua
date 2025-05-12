@@ -1,266 +1,286 @@
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TeleportService = game:GetService("TeleportService")
-local HttpService = game:GetService("HttpService")
-local Workspace = game:GetService("Workspace")
+local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/1ForeverHD/Fluent/main/library.lua"))()
 
-local player = Players.LocalPlayer
-local webhook = getgenv().webhook or ""
-local joinTeam = getgenv().join or "Pirates"
-local triedServers = {}
-local fruitLabel
+local Window = Fluent:CreateWindow({
+    Title = "Bubble Blitz",
+    SubTitle = "By QuePro, with Fluent UI",
+    TabWidth = 120,
+    Size = UDim2.fromOffset(500, 400),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
 
-pcall(function()
-    ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", joinTeam)
-end)
+--// Tab: Automation
+local Automation = Window:AddTab({ Title = "Automation", Icon = "rbxassetid://4483362458" })
 
-local function createGUI()
-    local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-    gui.Name = "DemonHub"
-    gui.ResetOnSpawn = false
+Automation:AddToggle("AutoBlowBubbles", {
+    Title = "Auto Blow Bubbles",
+    Description = "Automatically Blows Bubbles.",
+    Default = false,
+    Callback = function(Value)
+        AutoBlowBubbles = Value
+    end
+})
 
-    local frame = Instance.new("Frame", gui)
-    frame.AnchorPoint = Vector2.new(0.5, 0.5)
-    frame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    frame.Size = UDim2.new(0, 420, 0, 170)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+Automation:AddToggle("AutoSellBubbles", {
+    Title = "Auto Sell Bubbles",
+    Description = "Automatically Sells Bubbles.",
+    Default = false,
+    Callback = function(Value)
+        AutoSellBubbles = Value
+    end
+})
 
-    local title = Instance.new("TextLabel", frame)
-    title.Text = "DEMONHUB | FRUIT FINDER"
-    title.Size = UDim2.new(1, -40, 0, 30)
-    title.Position = UDim2.new(0, 10, 0, 5)
-    title.TextColor3 = Color3.fromRGB(255, 100, 100)
-    title.Font = Enum.Font.GothamBold
-    title.TextScaled = true
-    title.BackgroundTransparency = 1
+Automation:AddDropdown("SelectedEgg", {
+    Title = "Select Egg",
+    Description = "Choose egg to hatch",
+    Values = EggsTable,
+    Multi = true,
+    Default = {EggsTable[1]},
+    Callback = function(Option)
+        SelectedEgg = Option
+    end
+})
 
-    local closeBtn = Instance.new("TextButton", frame)
-    closeBtn.Text = "✕"
-    closeBtn.Size = UDim2.new(0, 28, 0, 28)
-    closeBtn.Position = UDim2.new(1, -35, 0, 5)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
-    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeBtn.Font = Enum.Font.GothamBold
-    closeBtn.TextSize = 16
-    closeBtn.MouseButton1Click:Connect(function()
-        frame.Visible = false
-    end)
+Automation:AddDropdown("HatchMode", {
+    Title = "Hatch Mode",
+    Description = "Single or Multi Egg Hatch",
+    Values = {"Single Egg", "Multiple Eggs"},
+    Default = "Single Egg",
+    Callback = function(Option)
+        MultiEggs = (Option == "Multiple Eggs")
+    end
+})
 
-    local openBtn = Instance.new("TextButton", gui)
-    openBtn.Text = "☰"
-    openBtn.Size = UDim2.new(0, 35, 0, 35)
-    openBtn.Position = UDim2.new(0, 10, 1, -45)
-    openBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    openBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    openBtn.Font = Enum.Font.GothamBold
-    openBtn.TextSize = 18
-    openBtn.MouseButton1Click:Connect(function()
-        frame.Visible = not frame.Visible
-    end)
+Automation:AddToggle("AutoHatch", {
+    Title = "Auto Hatch",
+    Description = "Automatically Hatches The Selected Egg.",
+    Default = false,
+    Callback = function(Value)
+        AutoHatch = Value
+    end
+})
 
-    fruitLabel = Instance.new("TextLabel", frame)
-    fruitLabel.Position = UDim2.new(0, 10, 0, 45)
-    fruitLabel.Size = UDim2.new(1, -20, 0, 25)
-    fruitLabel.Text = "Fruit: None"
-    fruitLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    fruitLabel.Font = Enum.Font.GothamBold
-    fruitLabel.TextSize = 20
-    fruitLabel.TextXAlignment = Enum.TextXAlignment.Left
-    fruitLabel.BackgroundTransparency = 1
+Automation:AddButton({
+    Title = "Hatch Egg",
+    Description = "Hatches The Selected Egg Once.",
+    Callback = function()
+        HatchEgg(SelectedEgg)
+    end
+})
 
-    local avatar = Instance.new("ImageLabel", frame)
-    avatar.Size = UDim2.new(0, 50, 0, 50)
-    avatar.Position = UDim2.new(0, 10, 1, -60)
-    avatar.BackgroundTransparency = 1
-    avatar.Image = "rbxthumb://type=AvatarHeadShot&id=" .. player.UserId .. "&w=150&h=150"
+Automation:AddDropdown("EquipStats", {
+    Title = "Auto Equip Currency",
+    Description = "Stat priority for pet equip",
+    Values = {"Bubbles", "Coins", "Gems", "Cogwheels", "Pumpkins", "Candycorn"},
+    Default = "Bubbles",
+    Callback = function(Value)
+        EquipStats = Value
+    end
+})
 
-    local username = Instance.new("TextLabel", frame)
-    username.Position = UDim2.new(0, 70, 1, -45)
-    username.Size = UDim2.new(1, -80, 0, 20)
-    username.Text = "User: " .. player.Name
-    username.TextColor3 = Color3.fromRGB(200, 200, 200)
-    username.Font = Enum.Font.Gotham
-    username.TextSize = 16
-    username.TextXAlignment = Enum.TextXAlignment.Left
-    username.BackgroundTransparency = 1
+Automation:AddToggle("AutoEquipPets", {
+    Title = "Auto Equip Best Pets",
+    Description = "Auto equips best pets based on selected stat.",
+    Default = true,
+    Callback = function(Value)
+        AutoEquipPets = Value
+    end
+})
+
+Automation:AddToggle("AutoFusePets", {
+    Title = "Auto Fuse Pets (Open Pet UI)",
+    Description = "Fuses unlocked pets automatically.",
+    Default = true,
+    Callback = function(Value)
+        AutoFusePets = Value
+    end
+})
+
+Automation:AddToggle("AutoCollectChests", {
+    Title = "Auto Collect Chests",
+    Description = "Collects all chests every 3 minutes.",
+    Default = true,
+    Callback = function(Value)
+        AutoCollectChests = Value
+    end
+})
+
+Automation:AddToggle("AntiMod", {
+    Title = "Kick On Mod Join",
+    Description = "Kicks if mod joins game.",
+    Default = true,
+    Callback = function(Value)
+        AntiMod = Value
+    end
+})
+
+--// Tab: Pickups
+local PickupsTab = Window:AddTab({ Title = "Pickups", Icon = "rbxassetid://4483362458" })
+
+PickupsTab:AddToggle("AutoPickupPumpkins", {
+    Title = "Auto Pickup Pumpkins",
+    Description = "From Fall World",
+    Default = false,
+    Callback = function(Value)
+        AutoPickupPumpkins = Value
+    end
+})
+
+PickupsTab:AddToggle("AutoPickupCandyCorn", {
+    Title = "Auto Pickup CandyCorn",
+    Description = "From Halloween World",
+    Default = false,
+    Callback = function(Value)
+        AutoPickupCandyCorn = Value
+    end
+})
+
+PickupsTab:AddToggle("TrickOrTreats", {
+    Title = "Auto Trick Or Treat",
+    Description = "Goes Trick Or Treating repeatedly.",
+    Default = false,
+    Callback = function(Value)
+        TrickOrTreats = Value
+    end
+})
+
+PickupsTab:AddToggle("AutoPickupGold", {
+    Title = "Auto Pickup Gold",
+    Description = "From Space World",
+    Default = false,
+    Callback = function(Value)
+        AutoPickupGold = Value
+    end
+})
+
+PickupsTab:AddToggle("AutoPickupGems", {
+    Title = "Auto Pickup Gems",
+    Description = "From Void World",
+    Default = false,
+    Callback = function(Value)
+        AutoPickupGems = Value
+    end
+})
+
+PickupsTab:AddToggle("AutoPickupExp", {
+    Title = "Auto Pickup EXP",
+    Description = "From XP Island",
+    Default = false,
+    Callback = function(Value)
+        AutoPickupExp = Value
+    end
+})
+
+--// Tab: Spoofing
+local Spoofing = Window:AddTab({ Title = "Spoofing", Icon = "rbxassetid://4483362458" })
+
+Spoofing:AddTextbox("SpoofedText", {
+    Title = "Spoofed Text",
+    Default = "999999999",
+    Callback = function(Text)
+        SpoofedText = Text
+    end
+})
+
+local spoofButtons = {
+    {"Spoof Pity", function() LocalPlayer.PlayerGui.ScreenGui.StatsFrame.PlayerStats.PlayerPity.Text = SpoofedText end},
+    {"Spoof Bubbles", function() LocalPlayer.PlayerGui.ScreenGui.StatsFrame.Stats.Bubble.Amount.Text = SpoofedText end},
+    {"Spoof Candycorn", function() LocalPlayer.PlayerGui.ScreenGui.StatsFrame.Stats.Candycorn.Amount.Text = SpoofedText end},
+    {"Spoof Cogwheels", function() LocalPlayer.PlayerGui.ScreenGui.StatsFrame.Stats.Cogwheels.Amount.Text = SpoofedText end},
+    {"Spoof Coins", function() LocalPlayer.PlayerGui.ScreenGui.StatsFrame.Stats.Coins.Amount.Text = SpoofedText end},
+    {"Spoof Gems", function() LocalPlayer.PlayerGui.ScreenGui.StatsFrame.Stats.Gems.Amount.Text = SpoofedText end},
+    {"Spoof Pumpkins", function() LocalPlayer.PlayerGui.ScreenGui.StatsFrame.Stats.Pumpkins.Amount.Text = SpoofedText end},
+    {"Spoof Coins Leaderstat", function() LocalPlayer.leaderstats.Coins.Value = SpoofedText end},
+    {"Spoof Gems Leaderstat", function() LocalPlayer.leaderstats.Gems.Value = SpoofedText end},
+    {"Spoof Eggs Leaderstat", function() LocalPlayer.leaderstats["Eggs Opened"].Value = SpoofedText end},
+    {"Spoof Bubbles Leaderstat", function() LocalPlayer.leaderstats["Bubbles Blown"].Value = SpoofedText end},
+    {"Spoof Player Tag", function() LocalPlayer.Character.CustomPlayerTag.Username.Text = SpoofedText end},
+    {"Spoof Username", function() LocalPlayer.Name = SpoofedText end},
+    {"Spoof User ID", function() LocalPlayer.UserId = SpoofedText end},
+    {"Spoof Display Name", function() LocalPlayer.DisplayName = SpoofedText end},
+}
+
+for _, spoof in ipairs(spoofButtons) do
+    Spoofing:AddButton({
+        Title = spoof[1],
+        Callback = spoof[2]
+    })
 end
 
-createGUI()
+--// Tab: Misc
+local MiscTab = Window:AddTab({ Title = "Misc", Icon = "rbxassetid://4483362458" })
 
-local function sendWebhook(fruitName)
-    if webhook == "" then return end
-    local data = {
-        ["embeds"] = {{
-            ["title"] = "Fruit Detected!",
-            ["color"] = 65280,
-            ["fields"] = {
-                {["name"] = "Fruit", ["value"] = fruitName, ["inline"] = true},
-                {["name"] = "Player", ["value"] = player.Name, ["inline"] = true}
-            },
-            ["thumbnail"] = {
-                ["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=150&height=150"
-            },
-            ["footer"] = {["text"] = "DemonHub | Fruit Finder"}
-        }}
-    }
+MiscTab:AddDropdown("TeleportWorld", {
+    Title = "Teleport To",
+    Description = "Select a world",
+    Values = WorldTable,
+    Callback = function(Option)
+        TeleportToWorld(Option)
+    end
+})
 
-    pcall(function()
-        HttpService:RequestAsync({
-            Url = webhook,
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = HttpService:JSONEncode(data)
-        })
-    end)
-end
+MiscTab:AddButton({
+    Title = "Unlock All Islands",
+    Callback = function()
+        for _, v in pairs(game:GetService("Workspace").FloatingIslands.Overworld:GetChildren()) do
+            Character.HumanoidRootPart.CFrame = v.TeleportPoint.CFrame
+            task.wait(1)
+        end
+    end
+})
 
-local function teleportTo(pos)
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:WaitForChild("HumanoidRootPart")
-    hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
-end
+MiscTab:AddToggle("EnableNoclip", {
+    Title = "Enable Noclip",
+    Description = "Walk through walls",
+    Default = false,
+    Callback = function(Value)
+        EnableNoclip = Value
+    end
+})
 
-local function storeAllFruits()
-    local Remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
-    local containers = {player.Backpack, player.Character or player.CharacterAdded:Wait()}
+MiscTab:AddToggle("Float", {
+    Title = "Enable Floating",
+    Description = "Float above the ground",
+    Default = false,
+    Callback = function(Value)
+        Float = Value
+    end
+})
 
-    for _, container in pairs(containers) do
-        for _, item in pairs(container:GetChildren()) do
-            if item:IsA("Tool") and string.find(item.Name, "Fruit") then
-                local raw = item.Name
-                local short = string.gsub(raw, " Fruit", "")
-                local full = short .. "-" .. short
-                pcall(function()
-                    Remote:InvokeServer("StoreFruit", full, item)
-                end)
-                fruitLabel.Text = "Fruit: Stored"
-                task.delay(5, function()
-                    if fruitLabel.Text == "Fruit: Stored" then
-                        fruitLabel.Text = "Fruit: None"
-                    end
-                end)
+MiscTab:AddDropdown("SelectedPet", {
+    Title = "Select Pet To Show",
+    Values = PetsTable,
+    Default = "None",
+    Callback = function(Value)
+        SelectedPet = Value
+    end
+})
+
+MiscTab:AddToggle("ShowPet", {
+    Title = "View Pet",
+    Description = "Shows the selected pet in workspace",
+    Default = true,
+    Callback = function(Value)
+        if Value then
+            for _, v in pairs(SelectedPet) do
+                ClonedPet = game:GetService("ReplicatedStorage").Assets.Pets[v]:Clone()
+                ClonedPet.Name = "DoggyCP"
+                ClonedPet.Parent = workspace
+                ClonedPet:PivotTo(Character.HumanoidRootPart.CFrame)
+            end
+        else
+            if workspace:FindFirstChild("DoggyCP") then
+                ClonedPet:Destroy()
+                ClonedPet = nil
             end
         end
     end
-end
+})
 
-local function findFruit()
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Tool") and obj:FindFirstChild("Handle") and obj.Parent == Workspace then
-            return obj
-        end
-    end
-    return nil
-end
-
-function hopServer()
-    local gameId = game.PlaceId
-    local jobId = game.JobId
-    local servers = {}
-    local cursor = ""
-
-    for attempt = 1, 5 do
-        local url = "https://games.roblox.com/v1/games/"..gameId.."/servers/Public?sortOrder=2&limit=100"..(cursor ~= "" and "&cursor="..cursor or "")
-        local success, result = pcall(function()
-            return HttpService:JSONDecode(game:HttpGet(url))
-        end)
-
-        if success and result and result.data then
-            for _, server in pairs(result.data) do
-                if server.id ~= jobId and server.playing < server.maxPlayers and not triedServers[server.id] then
-                    table.insert(servers, server.id)
-                end
-            end
-            cursor = result.nextPageCursor
-        else
-            warn("[Hop] Failed to get server list. Retrying...")
-        end
-
-        if #servers > 0 then break end
-        task.wait(1)
-    end
-
-    if #servers > 0 then
-        local target = servers[math.random(1, #servers)]
-        triedServers[target] = true
-        pcall(function()
-            TeleportService:TeleportToPlaceInstance(gameId, target, Players.LocalPlayer)
-        end)
-    else
-        warn("[Hop] No valid server found. Retrying in 5s.")
-        task.wait(5)
-        hopServer()
-    end
-end
-
-task.spawn(function()
-    while true do
-        local fruit = findFruit()
-        if fruit then
-            fruitLabel.Text = "Fruit: " .. fruit.Name
-            teleportTo(fruit.Handle.Position)
-            sendWebhook(fruit.Name)
-            task.wait(3)
-            storeAllFruits()
-        else
-            fruitLabel.Text = "Fruit: None"
-            task.wait(getgenv().hop)
-            hopServer()
-        end
-        task.wait(2)
-    end
-end)
-
-task.spawn(function()
-    while true do
-        if getgenv().AutoStoreFruit then
-            storeAllFruits()
-        end
-        task.wait(2)
-    end
-end)
-
-local function showNotification()
-    local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-    gui.Name = "DemonHubNotify"
-    gui.ResetOnSpawn = false
-
-    local frame = Instance.new("Frame", gui)
-    frame.AnchorPoint = Vector2.new(1, 1)
-    frame.Position = UDim2.new(1, -10, 1, -10)
-    frame.Size = UDim2.new(0, 250, 0, 80)
-    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-
-    local label = Instance.new("TextLabel", frame)
-    label.Text = "Made by Jova"
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 18
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.BackgroundTransparency = 1
-    label.Size = UDim2.new(1, -10, 0, 30)
-    label.Position = UDim2.new(0, 10, 0, 5)
-    label.TextXAlignment = Enum.TextXAlignment.Left
-
-    local button = Instance.new("TextButton", frame)
-    button.Text = "Copy Discord"
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 16
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    button.Size = UDim2.new(0, 150, 0, 30)
-    button.Position = UDim2.new(0, 10, 1, -40)
-    Instance.new("UICorner", button)
-
-    button.MouseButton1Click:Connect(function()
-        setclipboard("https://discord.gg/5S7vNWEn5e")
-        button.Text = "Copied!"
-    end)
-
-    task.delay(5, function()
-        gui:Destroy()
-    end)
-end
-
-showNotification()
+Fluent:Notify({
+    Title = "Script Loaded!",
+    Content = "Fluent UI Loaded Successfully. Join Discord for feedback!\nhttps://dsc.gg/boatblitz",
+    SubContent = "Toggle GUI with Left Ctrl",
+    Duration = 6.5
+})
