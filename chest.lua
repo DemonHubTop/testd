@@ -9,38 +9,50 @@ function Demon:Create(config)
     gui.Name = "DemonHubUI"
     gui.ResetOnSpawn = false
 
+    -- Toggle Button (Show/Hide)
+    local toggleBtn = Instance.new("ImageButton", gui)
+    toggleBtn.Size = UDim2.new(0, 40, 0, 40)
+    toggleBtn.Position = UDim2.new(0, 10, 0, 10)
+    toggleBtn.BackgroundTransparency = 1
+    toggleBtn.Image = "rbxassetid://6031091002"
+
     -- Main Window
     local main = Instance.new("Frame", gui)
-    main.Size = UDim2.new(0, 650, 0, 400)
-    main.Position = UDim2.new(0.5, -325, 0.5, -200)
+    main.Size = UDim2.new(0, 500, 0, 350)
+    main.Position = UDim2.new(0.5, -250, 0.5, -175)
     main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     main.BackgroundTransparency = 0.1
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 8)
 
-    local UICorner = Instance.new("UICorner", main)
-    UICorner.CornerRadius = UDim.new(0, 8)
+    local isVisible = true
+    toggleBtn.MouseButton1Click:Connect(function()
+        isVisible = not isVisible
+        main.Visible = isVisible
+    end)
 
     -- Title
     local title = Instance.new("TextLabel", main)
     title.Size = UDim2.new(1, 0, 0, 40)
-    title.BackgroundTransparency = 1
+    title.Position = UDim2.new(0, 0, 0, 0)
     title.Text = config.Title or "Demon Hub"
     title.Font = Enum.Font.GothamBold
     title.TextSize = 24
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.BackgroundTransparency = 1
 
     -- Sidebar
     local sidebar = Instance.new("Frame", main)
-    sidebar.Size = UDim2.new(0, 150, 1, -40)
+    sidebar.Size = UDim2.new(0, 120, 1, -40)
     sidebar.Position = UDim2.new(0, 0, 0, 40)
     sidebar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0, 8)
 
     -- Content Area
     local content = Instance.new("Frame", main)
-    content.Size = UDim2.new(1, -150, 1, -40)
-    content.Position = UDim2.new(0, 150, 0, 40)
+    content.Size = UDim2.new(1, -120, 1, -40)
+    content.Position = UDim2.new(0, 120, 0, 40)
     content.BackgroundTransparency = 1
 
     local currentElements = {}
@@ -52,10 +64,11 @@ function Demon:Create(config)
         currentElements = {}
     end
 
-    local function createTabButton(tab, index)
+    local totalTabs = #config.Tabs
+    for i, tab in ipairs(config.Tabs or {}) do
         local tabBtn = Instance.new("TextButton", sidebar)
-        tabBtn.Size = UDim2.new(1, -20, 0, 40)
-        tabBtn.Position = UDim2.new(0, 10, 0, 10 + (index - 1) * 50)
+        tabBtn.Size = UDim2.new(1, -10, 0, 35)
+        tabBtn.Position = UDim2.new(0, 5, 1, -45 * (totalTabs - i + 1) - 5)
         tabBtn.Text = tab.Name
         tabBtn.Font = Enum.Font.Gotham
         tabBtn.TextSize = 18
@@ -65,7 +78,6 @@ function Demon:Create(config)
 
         tabBtn.MouseButton1Click:Connect(function()
             clearContent()
-
             local y = 10
             for _, item in ipairs(tab.Items or {}) do
                 if item.Type == "Paragraph" then
@@ -121,13 +133,9 @@ function Demon:Create(config)
             end
         end)
 
-        if index == 1 then
+        if i == 1 then
             tabBtn:MouseButton1Click()
         end
-    end
-
-    for i, tab in ipairs(config.Tabs or {}) do
-        createTabButton(tab, i)
     end
 end
 
