@@ -31,6 +31,7 @@ function Demon:Create(config)
     contentArea.Position = UDim2.new(0, 100, 0, 50)
     contentArea.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     contentArea.ClipsDescendants = true
+    contentArea.BorderSizePixel = 0
 
     local currentContent = {}
 
@@ -74,17 +75,20 @@ function Demon:Create(config)
                 local toggle = Instance.new("TextButton", contentArea)
                 toggle.Size = UDim2.new(0, 200, 0, 40)
                 toggle.Position = UDim2.new(0, 220, 0, y)
-                toggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-                toggle.TextColor3 = Color3.new(1, 1, 1)
                 toggle.Font = Enum.Font.Gotham
                 toggle.TextSize = 24
+                toggle.TextColor3 = Color3.new(1, 1, 1)
 
                 local state = toggleData.Default or false
-                toggle.Text = toggleData.Name .. ": " .. (state and "ON" or "OFF")
+                local function updateVisual()
+                    toggle.Text = toggleData.Name .. ": " .. (state and "✅" or "❌")
+                    toggle.BackgroundColor3 = state and Color3.fromRGB(60, 180, 75) or Color3.fromRGB(200, 60, 60)
+                end
+                updateVisual()
 
                 toggle.MouseButton1Click:Connect(function()
                     state = not state
-                    toggle.Text = toggleData.Name .. ": " .. (state and "ON" or "OFF")
+                    updateVisual()
                     toggleData.Callback(state)
                 end)
 
