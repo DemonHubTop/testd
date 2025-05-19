@@ -21,17 +21,16 @@ function Demon:Create(config)
     title.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     title.Font = Enum.Font.GothamBold
 
-    local tabList = Instance.new("Frame", mainFrame)
-    tabList.Size = UDim2.new(0, 160, 1, -50)
-    tabList.Position = UDim2.new(0, 0, 0, 50)
-    tabList.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    local tabContainer = Instance.new("Frame", mainFrame)
+    tabContainer.Size = UDim2.new(0, 100, 1, -50)
+    tabContainer.Position = UDim2.new(0, 0, 0, 50)
+    tabContainer.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 
     local contentArea = Instance.new("Frame", mainFrame)
-    contentArea.Size = UDim2.new(1, -170, 1, -60)
-    contentArea.Position = UDim2.new(0, 170, 0, 60)
+    contentArea.Size = UDim2.new(1, -100, 1, -50)
+    contentArea.Position = UDim2.new(0, 100, 0, 50)
     contentArea.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     contentArea.ClipsDescendants = true
-    contentArea.BorderSizePixel = 0
 
     local currentContent = {}
 
@@ -42,10 +41,11 @@ function Demon:Create(config)
         currentContent = {}
     end
 
+    local totalTabs = #config.Tabs
     for i, tab in ipairs(config.Tabs or {}) do
-        local tabButton = Instance.new("TextButton", tabList)
+        local tabButton = Instance.new("TextButton", tabContainer)
         tabButton.Size = UDim2.new(1, -10, 0, 40)
-        tabButton.Position = UDim2.new(0, 5, 0, 10 + (i - 1) * 50)
+        tabButton.Position = UDim2.new(0, 5, 1, -50 * (totalTabs - i + 1) - 10)
         tabButton.Text = tab.Name
         tabButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
         tabButton.TextColor3 = Color3.new(1, 1, 1)
