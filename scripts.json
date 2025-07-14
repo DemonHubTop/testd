@@ -1,12 +1,14 @@
 {
   "scripts": [
     {
-      "name": "Speed Hub X",
-      "script": "https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua"
+      "id": 2753915549,
+      "name": "Blox Fruit Hub",
+      "script": "https://raw.githubusercontent.com/USERNAME/REPO/main/bloxfruithub.lua"
     },
     {
-      "name": "No Lag",
-      "script": "https://rawscripts.net/raw/Grow-a-Garden-NoLag-Hub-no-key-38699"
+      "id": 126884695634066,
+      "name": "Grow A Garden AutoFarm",
+      "script": "https://raw.githubusercontent.com/USERNAME/REPO/main/growagarden.lua"
     }
   ]
 }
