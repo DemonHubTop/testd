@@ -2,11 +2,11 @@
   "scripts": [
     {
       "name": "Speed Hub X",
-      "script": "loadstring(game:HttpGet('https://raw.githubusercontent.com/USERNAME/REPO/main/speedhub.lua'))()"
+      "script": "https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua"
     },
     {
       "name": "No Lag",
-      "script": "loadstring(game:HttpGet('https://raw.githubusercontent.com/USERNAME/REPO/main/nolag.lua'))()"
+      "script": "https://rawscripts.net/raw/Grow-a-Garden-NoLag-Hub-no-key-38699"
     }
   ]
 }
