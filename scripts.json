@@ -2,13 +2,18 @@
   "scripts": [
     {
       "id": 2753915549,
-      "name": "Blox Fruit Hub",
-      "script": "https://raw.githubusercontent.com/USERNAME/REPO/main/bloxfruithub.lua"
+      "name": "Blox Fruits Autofarm",
+      "script": "https://raw.githubusercontent.com/USERNAME/REPO/main/blox.lua"
     },
     {
       "id": 126884695634066,
-      "name": "Grow A Garden AutoFarm",
-      "script": "https://raw.githubusercontent.com/USERNAME/REPO/main/growagarden.lua"
+      "name": "Grow a Garden Auto Farm",
+      "script": "https://raw.githubusercontent.com/USERNAME/REPO/main/grow.lua"
+    },
+    {
+      "id": 18668065416,
+      "name": "Blue Lock Script",
+      "script": "https://raw.githubusercontent.com/USERNAME/REPO/main/blue.lua"
     }
   ]
 }
